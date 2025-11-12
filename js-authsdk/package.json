@@ -1,0 +1,21 @@
+{
+    "name": "@gh-platform/auth-sdk",
+    "version": "1.0.0",
+    "description": "VanillaJS Auth SDK for GH Platform",
+    "type": "module",
+    "main": "dist/auth-sdk.umd.js",
+    "module": "dist/auth-sdk.es.js",
+    "exports": {
+        ".": {
+            "import": "./dist/auth-sdk.es.js",
+            "require": "./dist/auth-sdk.umd.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && terser dist/auth-sdk.umd.js -o dist/auth-sdk.min.js --compress --mangle"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "terser": "^5.20.0"
+    }
+}
