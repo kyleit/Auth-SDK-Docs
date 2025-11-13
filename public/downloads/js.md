@@ -19,7 +19,7 @@ và tự động xác thực request HTTP trong kiến trúc **multi‑tenant** 
 
 Mọi API của GH Platform Authenticate đều sử dụng dạng:
 
-```
+```endpoint
 /api/v1/{tenant}/auth/login
 /api/v1/{tenant}/auth/refresh
 /api/v1/{tenant}/auth/introspect
