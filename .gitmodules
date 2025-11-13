@@ -1,0 +1,3 @@
+[submodule "auth-sdk-go"]
+	path = auth-sdk-go
+	url = git@github.com:kyleit/auth-sdk.git
