@@ -5,7 +5,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GH Platform SDK Documentation</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- PrismJS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
@@ -16,49 +19,89 @@
 <body class="bg-gray-50 text-gray-800">
     <header class="bg-indigo-600 text-white py-4 shadow-md">
         <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-semibold">GH Platform SDK</h1>
+            <h1 class="text-2xl font-semibold">GH Platform — Authentication SDK</h1>
             <a href="/" class="text-sm hover:underline">Trang chủ</a>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-8">
+    <main class="max-w-5xl mx-auto px-4 py-10">
         <h2 class="text-3xl font-bold mb-6 text-indigo-700">Tài liệu SDK Đăng nhập & Xác thực</h2>
         <p class="mb-8 text-gray-600 leading-relaxed">
-            Bộ SDK giúp tích hợp nhanh chức năng <strong>login, refresh token, introspect</strong> và xác thực request.
-            Hỗ trợ 3 ngôn ngữ phổ biến: <strong>JavaScript</strong>, <strong>Python</strong>, và <strong>Go</strong>.
+            Bộ SDK hỗ trợ đăng nhập, refresh token, introspect và xác thực request.
+            Hỗ trợ 3 ngôn ngữ phổ biến: <strong>JavaScript</strong>, <strong>Python</strong>, <strong>Go</strong>.
+            Các ví dụ dưới đây đã được cập nhật để phù hợp với kiến trúc <strong>multi-tenant</strong> của GH Platform:
+            đường dẫn API dạng <code>/api/v1/{tenant}/auth/...</code> và payload dùng <code>identifier</code> +
+            <code>client_id</code>.
         </p>
 
+        <!-- Tabs -->
         <div class="flex space-x-2 border-b mb-6">
             <button class="tab-btn active-tab" data-tab="js">JavaScript</button>
             <button class="tab-btn" data-tab="py">Python</button>
             <button class="tab-btn" data-tab="go">Golang</button>
         </div>
 
-        <!-- JavaScript Tab -->
+        <!-- JS TAB -->
         <div id="tab-js" class="tab-content">
             <h3 class="text-xl font-semibold mb-3">📦 SDK JavaScript</h3>
-            <p>Dùng được trong trình duyệt, SPA hoặc Node.js.</p>
+            <p class="text-gray-700">Dùng cho Browser, SPA, Node.js. Demos có tenant-aware và token storage theo tenant.
+            </p>
 
             <div class="bg-gray-100 rounded p-4 mt-4">
                 <h4 class="font-semibold mb-2">Cài đặt qua NPM</h4>
                 <pre><code class="language-bash">npm install @gh-platform/auth-sdk</code></pre>
             </div>
 
+            <!-- Browser CDN -->
             <div class="bg-gray-100 rounded p-4 mt-4">
-                <h4 class="font-semibold mb-2">Sử dụng nhanh (trình duyệt)</h4>
-                <pre><code class="language-html">&lt;script src="https://cdn.yourdomain.com/auth-sdk.min.js"&gt;&lt;/script&gt;
-&lt;script&gt;
-  const { AuthClient, AuthFetch, TokenStorage } = window.AuthSDK;
-  const client = new AuthClient({ baseUrl: "https://auth.example.com" });
-  const store = new TokenStorage();
-  const fetcher = new AuthFetch(client, store);
+                <h4 class="font-semibold mb-2">Sử dụng nhanh (Browser CDN / local build)</h4>
+                <p class="text-sm text-gray-600">Ví dụ import từ file build trong <code>sdk/js-authsdk/dist</code>:</p>
+                <pre><code class="language-html">&lt;script type="module"&gt;
+import { AuthClient, TokenStorage, AuthFetch } from "./js/auth-sdk.es.js";
 
-  async function login() {
-    const res = await client.login("alice", "password");
-    store.accessToken = res.access_token;
-    alert("Đăng nhập thành công!");
-  }
+/* Khởi tạo tenant-aware client */
+const tenant = "demo"; // hoặc trích xuất từ email (vd: alice@example.com => tenant = example.com)
+const client = new AuthClient({
+  baseUrl: "https://auth.example.com",
+  tenant
+});
+
+/* TokenStorage tự động dùng tenant để tách khóa lưu trữ */
+const storage = new TokenStorage("auth", tenant);
+const fetcher = new AuthFetch(client, storage);
+
+/* Login */
+async function login() {
+  const res = await client.login(
+    "alice@example.com",     // identifier
+    "User@123",              // password
+    "gh-platform-admin"      // client_id
+  );
+
+  storage.accessToken = res.access_token;
+  storage.refreshToken = res.refresh_token;
+  console.log("Logged in", res);
+}
 &lt;/script&gt;
+</code></pre>
+            </div>
+
+            <!-- Features -->
+            <div class="bg-gray-100 rounded p-4 mt-4">
+                <h4 class="font-semibold mb-2">Các hàm quan trọng</h4>
+
+                <pre><code class="language-javascript">
+// Login
+await client.login(identifier, password, client_id);
+
+// Refresh token
+await client.refresh(refresh_token);
+
+// Introspect
+await client.introspect(access_token);
+
+// Fetch wrapper (auto refresh & retry)
+const resp = await fetcher.fetch(client.baseUrl + "/api/v1/" + tenant + "/auth/me");
 </code></pre>
             </div>
 
@@ -68,16 +111,41 @@
             </a>
         </div>
 
-        <!-- Python Tab -->
+        <!-- PYTHON TAB -->
         <div id="tab-py" class="tab-content hidden">
             <h3 class="text-xl font-semibold mb-3">🐍 SDK Python</h3>
-            <p>Hỗ trợ FastAPI, Flask (đã có middleware tích hợp).</p>
+            <p class="text-gray-700">Hỗ trợ FastAPI, Flask — có middleware tích hợp. Khởi tạo client theo tenant.</p>
 
             <pre class="bg-gray-100 rounded p-4 mt-4"><code class="language-python">
 from authsdk.client import AuthClient
-auth = AuthClient(base_url="https://auth.example.com")
-res = auth.login("alice", "password")
-print(res["access_token"])
+
+auth = AuthClient(
+    tenant="demo",
+    base_url="https://auth.example.com",
+    jwks_url="https://auth.example.com/.well-known/jwks.json"
+)
+
+res = auth.login(
+    identifier="alice@example.com",
+    password="User@123",
+    client_id="gh-platform-admin"
+)
+
+print("Access token:", res["access_token"])
+</code></pre>
+
+            <h4 class="text-lg font-semibold mt-6 mb-3">Middleware (FastAPI)</h4>
+
+            <pre class="bg-gray-100 rounded p-4"><code class="language-python">
+from fastapi import FastAPI, Depends
+from authsdk.middleware_fastapi import FastAPIAuth
+
+app = FastAPI()
+auth_dep = FastAPIAuth(auth, audience="my-service")
+
+@app.get("/protected")
+async def protected(user = Depends(auth_dep)):
+    return {"user": user}
 </code></pre>
 
             <a href="./downloads/auth-sdk-py.zip" download
@@ -86,31 +154,32 @@ print(res["access_token"])
             </a>
         </div>
 
-        <!-- Go Tab -->
+        <!-- GO TAB -->
         <div id="tab-go" class="tab-content hidden">
             <h3 class="text-xl font-semibold mb-3">🐹 SDK Golang</h3>
-            <p>Dùng được với Gin hoặc Fiber middleware.</p>
+            <p class="text-gray-700">Dùng tốt với Gin, Fiber hoặc gRPC Gateway. Khởi tạo client theo tenant.</p>
 
             <pre class="bg-gray-100 rounded p-4 mt-4"><code class="language-go">
 import (
-  "context"
-  "fmt"
-  "github.com/gh-platform/core/auth-sdk/client"
+    "context"
+    "fmt"
+    sdk "github.com/gh-platform/core/auth-sdk/client"
 )
 
 func main() {
-  c := client.NewAuthClient("https://auth.example.com")
-  res, _ := c.Login(context.Background(), "alice", "secret", "")
-  fmt.Println(res.AccessToken)
+    c := sdk.NewAuthClient("demo", "https://auth.example.com")
+
+    res, _ := c.Login(context.Background(), sdk.LoginRequest{
+        Identifier: "alice@example.com",
+        Password: "User@123",
+        ClientID: "gh-platform-admin",
+    })
+
+    fmt.Println(res.AccessToken)
 }
 </code></pre>
 
-            <h4 class="font-semibold mt-6 mb-2 text-gray-700">🔧 Cấu hình trong môi trường Mono-Repo (go.work)</h4>
-            <p class="mb-3 text-gray-600">
-                Nếu bạn đang phát triển trong cùng workspace với backend, hãy dùng <code>go.work</code> để liên kết
-                module local.
-            </p>
-
+            <h4 class="font-semibold mt-6 mb-2">Mono-repo (go.work) cấu hình</h4>
             <pre class="bg-gray-100 rounded p-4"><code class="language-go">
 go 1.23
 
@@ -124,29 +193,16 @@ replace github.com/gh-platform/core/auth-sdk => ./auth-sdk
 replace github.com/gh-platform/core/share-library => ./share-library
 </code></pre>
 
-            <p class="text-gray-600 mt-2 mb-4">
-                Sau đó chạy:
-                <code class="bg-gray-200 px-2 py-1 rounded">go work sync</code>
-            </p>
-
-            <h4 class="font-semibold mt-6 mb-2 text-gray-700">⚙️ Nếu không dùng go.work</h4>
-            <p class="mb-3 text-gray-600">Thêm <code>replace</code> trực tiếp vào file <code>backend/go.mod</code>:</p>
-            <pre class="bg-gray-100 rounded p-4"><code class="language-go">
-replace github.com/gh-platform/core/auth-sdk => ../auth-sdk
-</code></pre>
-
-            <p class="text-gray-600 mt-2 mb-4">
-                Sau đó chạy: <code class="bg-gray-200 px-2 py-1 rounded">go mod tidy</code>
-            </p>
-
             <a href="./downloads/auth-sdk-go.zip" download
                 class="inline-block bg-indigo-600 text-white px-6 py-3 mt-6 rounded-lg hover:bg-indigo-700 shadow">
                 ⬇️ Tải Golang SDK
             </a>
         </div>
+
         <hr class="my-10 border-gray-300">
+
         <footer class="text-sm text-gray-500 text-center">
-            © 2025 GH Platform — Authenticate SDK Documentation
+            © 2025 GH Platform — Authentication SDK
         </footer>
     </main>
 
@@ -154,11 +210,10 @@ replace github.com/gh-platform/core/auth-sdk => ../auth-sdk
         .tab-btn {
             padding: 0.75rem 1rem;
             border-bottom: 2px solid transparent;
-            background: none;
             cursor: pointer;
             font-weight: 500;
             color: #555;
-            transition: all 0.2s;
+            transition: 0.2s;
         }
 
         .tab-btn:hover {
@@ -171,7 +226,7 @@ replace github.com/gh-platform/core/auth-sdk => ../auth-sdk
         }
 
         .tab-content {
-            animation: fadeIn 0.3s ease-in-out;
+            animation: fadeIn .25s ease-in;
         }
 
         @keyframes fadeIn {
@@ -188,11 +243,13 @@ replace github.com/gh-platform/core/auth-sdk => ../auth-sdk
     <script>
         const buttons = document.querySelectorAll(".tab-btn");
         const tabs = document.querySelectorAll(".tab-content");
+
         buttons.forEach(btn => {
             btn.addEventListener("click", () => {
                 buttons.forEach(b => b.classList.remove("active-tab"));
                 btn.classList.add("active-tab");
-                tabs.forEach(tab => tab.classList.add("hidden"));
+
+                tabs.forEach(t => t.classList.add("hidden"));
                 document.getElementById(`tab-${btn.dataset.tab}`).classList.remove("hidden");
             });
         });
