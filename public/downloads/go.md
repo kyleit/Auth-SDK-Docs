@@ -26,19 +26,19 @@ Golang SDK hỗ trợ xác thực cho hệ thống **GH Platform Authenticate**,
 Nếu SDK đã được public:
 
 ```bash
-go get github.com/gh-platform/core/auth-sdk@latest
+go get github.com/kyleit/auth-sdk@latest
 ```
 
 Hoặc chỉ định version cụ thể:
 
 ```bash
-go get github.com/gh-platform/core/auth-sdk@v1.0.0
+go get github.com/kyleit/auth-sdk@v1.0.0
 ```
 
 Import:
 
 ```go
-import "github.com/gh-platform/core/auth-sdk/client"
+import "github.com/kyleit/auth-sdk/client"
 ```
 
 ---
@@ -82,7 +82,7 @@ type LoginRequest struct {
 import (
     "context"
     "fmt"
-    "github.com/gh-platform/core/auth-sdk/client"
+    "github.com/kyleit/auth-sdk/client"
 )
 
 func main() {
@@ -109,7 +109,7 @@ func main() {
 ```go
 import (
     "github.com/gin-gonic/gin"
-    "github.com/gh-platform/core/auth-sdk/middleware"
+    "github.com/kyleit/auth-sdk/middleware"
 )
 
 func main() {
@@ -136,7 +136,7 @@ func main() {
 ```go
 import (
     "github.com/gofiber/fiber/v2"
-    "github.com/gh-platform/core/auth-sdk/middleware"
+    "github.com/kyleit/auth-sdk/middleware"
 )
 
 func main() {
@@ -195,7 +195,7 @@ use (
     ./share-library
 )
 
-replace github.com/gh-platform/core/auth-sdk => ./auth-sdk
+replace github.com/kyleit/auth-sdk => ./auth-sdk
 replace github.com/gh-platform/core/share-library => ./share-library
 ```
 
@@ -217,7 +217,7 @@ git push origin v1.0.0
 Kiểm tra tại:
 
 ```
-https://pkg.go.dev/github.com/gh-platform/core/auth-sdk
+https://pkg.go.dev/github.com/kyleit/auth-sdk
 ```
 
 ---
